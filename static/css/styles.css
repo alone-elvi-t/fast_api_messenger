@@ -1,0 +1,13 @@
+body {
+    background-color: #f8f9fa;
+}
+.chat-window {
+    height: 400px;
+    overflow-y: scroll;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    padding: 10px;
+}
+.navbar {
+    margin-bottom: 20px;
+}

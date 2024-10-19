@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Messaging App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Добро пожаловать в сервис обмена мгновенными сообщениями!</h1>
+    <p>Вы можете зарегистрироваться или войти в систему, чтобы начать отправлять сообщения.</p>
+    <a class="btn btn-primary" href="/auth/register">Зарегистрироваться</a>
+    <a class="btn btn-secondary" href="/auth/login">Войти</a>
+</div>
+{% endblock %}
