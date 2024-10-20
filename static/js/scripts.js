@@ -1,92 +1,57 @@
-// function showSuccessMessage(message) {
-//     const alertBox = document.createElement('div');
-//     alertBox.className = 'alert alert-success';
-//     alertBox.innerHTML = message;
-//     document.body.prepend(alertBox);
-//     setTimeout(() => alertBox.remove(), 3000);  // Уведомление исчезнет через 3 секунды
-// }
+// Получаем имя пользователя из localStorage (если оно сохраняется после входа)
+const username = localStorage.getItem('username'); // Предполагается, что оно сохраняется при входе
 
-// let username = "{{ current_user.username }}";
-// let socket = new WebSocket(`ws://localhost:8000/ws/${username}`);
+// Подключаем WebSocket с именем пользователя
+const ws = new WebSocket(`ws://localhost:8100/websocket/ws/${username}`);
 
-// // Получение сообщений с сервера
-// socket.onmessage = function (event) {
-//     let message = event.data;
-//     console.log("Получено сообщение: ", message);
-// };
+// Логика получения сообщений
+ws.onmessage = function (event) {
+    const chatWindow = $('#chat-window');
+    const newMessage = $('<p></p>').text(event.data);
+    chatWindow.append(newMessage);
+};
 
-// // Отправка сообщения на сервер
-// function sendMessage(recipient, message) {
-//     socket.send(`${recipient}:${message}`);
-// }
+// Логика отправки сообщений
+$('#message-form').submit(function (event) {
+    event.preventDefault();
+    const message = $('#message').val();
+    const recipient = prompt("Введите имя получателя:");
+    const formattedMessage = `${recipient}:${message}`;  // Форматируем сообщение
 
-// // Пример использования
-// sendMessage("friend_username", "Привет!");
+    ws.send(formattedMessage);  // Отправляем сообщение через WebSocket
+    $('#message').val('');  // Очищаем поле ввода
+});
 
-$(document).ready(function () {
-    // Логика для страницы выхода
-    $('#logout').click(function (event) {
-        event.preventDefault();
-        // Удаляем токен и перенаправляем на страницу входа
-        localStorage.removeItem('token');
-        window.location.href = '/auth/login/';
-    });
 
-    // Логика для регистрации
-    $('#register-form').submit(function (event) {
-        event.preventDefault();
-        const username = $('#username').val();
-        const password = $('#password').val();
+// Логика для входа
+$('#login-form').submit(function (event) {
+    event.preventDefault();
+    const username = $('#username').val();
+    const password = $('#password').val();
 
-        $.ajax({
-            url: '/auth/register/',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ username: username, password: password }),
-            success: function (response) {
-                alert('Пользователь зарегистрирован. Теперь вы можете войти.');
-                window.location.href = '/auth/login/';
-            }
-        });
-    });
+    $.ajax({
+        url: '/auth/login/',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ username: username, password: password }),
 
-    // Логика для входа
-    $('#login-form').submit(function (event) {
-        event.preventDefault();
-        const username = $('#username').val();
-        const password = $('#password').val();
-        debugger;
-        $.ajax({
-            url: '/auth/login/',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ username: username, password: password }),
-            
-            success: function (response) {
-                localStorage.setItem('token', response.access_token);
-                alert('Вы вошли в систему');
-                window.location.href = '/chat/chat/';
-            },
-            error: function () {
-                console.log(data)
-                alert('Ошибка входа. Проверьте правильность данных.');
-            }
-        });
-    });
-
-    // Логика для чата
-    const ws = new WebSocket('ws://localhost:8000//websocket/ws/');
-    ws.onmessage = function (event) {
-        const chatWindow = $('#chat-window');
-        const newMessage = $('<p></p>').text(event.data);
-        chatWindow.append(newMessage);
-    };
-
-    $('#message-form').submit(function (event) {
-        event.preventDefault();
-        const message = $('#message').val();
-        ws.send(message);
-        $('#message').val('');
+        success: function (response) {
+            localStorage.setItem('token', response.access_token);  // Сохраняем токен
+            localStorage.setItem('username', username);  // Сохраняем имя пользователя
+            alert('Вы вошли в систему');
+            window.location.href = '/chat/chat/';
+        },
+        error: function () {
+            alert('Ошибка входа. Проверьте правильность данных.');
+        }
     });
 });
 
+
+// Логика для выхода
+$('#logout').click(function (event) {
+    event.preventDefault();
+    localStorage.removeItem('token');  // Удаляем токен
+    localStorage.removeItem('username');  // Удаляем имя пользователя
+    window.location.href = '/auth/login/';  // Перенаправляем на страницу входа
+});

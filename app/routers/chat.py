@@ -16,25 +16,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/chat/", response_class=HTMLResponse)
+@router.get("/chat", response_class=HTMLResponse)
 async def get_chat_page(
     request: Request, current_user: User = Depends(get_current_user)
 ):
     """
     Рендеринг страницы чата с текущим пользователем.
     """
-    logger.info(f"ROUTER::CHAT::GET_CHAT_PAGE {current_user}")
+
     return templates.TemplateResponse(
         "chat.html", {"request": request, "current_user": current_user}
     )
 
 
-@router.websocket("/ws/")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(f"Сообщение получено: {data}")
+
 
 
 @router.post(

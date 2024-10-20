@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Body
 from sqlalchemy.orm import Session
 from app.schemas.user import UserResponse
 
@@ -83,11 +83,13 @@ async def login(request: Request):
 @router.post("/login/", summary="Вход пользователя")
 async def login(
     response: Response,
-    username: str = Form(...),
-    password: str = Form(...),
+    credentials: dict = Body(...),
     db: Session = Depends(get_db)
 ):
     logging.info(f"ROUTER::AUTH::LOGIN::POST::response {response}")
+
+    username = credentials.get("username")
+    password = credentials.get("password")
 
     # Аутентификация
     user = authenticate_user(db, username, password)
@@ -140,7 +142,6 @@ async def login(
 #     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
 
 
-
 #     return response
 
 
@@ -173,29 +174,6 @@ async def refresh_token(token: str = Depends(oauth2_scheme)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post(
-    "/password-reset/request/",
-    summary="Запрос на сброс пароля",
-    tags=["Password Reset"],
-)
-async def request_password_reset(
-    username: str = Form(..., description="Имя пользователя для сброса пароля"),
-    db: Session = Depends(get_db),
-):
-    """
-    Генерация токена для сброса пароля и отправка пользователю (в реальном приложении отправляется по email).
-
-    Возвращает токен для сброса пароля.
-    """
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    reset_token = create_password_reset_token(data={"sub": user.username})
-
-    return {"reset_token": reset_token}
-
-
 @router.post("/password-reset/", summary="Сброс пароля", tags=["Password Reset"])
 async def reset_password(
     token: str = Form(..., description="Токен для сброса пароля"),
@@ -222,62 +200,3 @@ async def reset_password(
     db.commit()
 
     return {"message": "Password reset successful"}
-
-
-@router.post(
-    "/token/refresh/",
-    response_model=Token,
-    summary="Обновление JWT токена",
-    tags=["Authentication"],
-)
-async def refresh_token(token: str = Depends(oauth2_scheme)):
-    """
-    Обновление access токена с использованием refresh токена.
-
-    Требуется:
-    - `refresh_token`: токен для обновления access токена.
-
-    Возвращает:
-    - `access_token`: новый токен для доступа к защищённым ресурсам.
-    """
-    username = verify_token(token)
-    access_token = create_access_token(data={"sub": username})
-
-    return {"access_token": access_token, "token_type": "bearer"}
-
-
-@router.post("/password-reset/", summary="Сброс пароля", tags=["Password Reset"])
-async def reset_password(
-    token: str = Form(..., description="Токен для сброса пароля"),
-    new_password: str = Form(..., description="Новый пароль"),
-    db: Session = Depends(get_db),
-):
-    """
-    Сброс пароля пользователя с использованием токена для сброса пароля.
-
-    Требует:
-    - `token`: токен для сброса пароля, сгенерированный при запросе на сброс пароля.
-    - `new_password`: новый пароль, который будет установлен для пользователя.
-
-    Возвращает сообщение об успешном сбросе пароля.
-    """
-    username = verify_token(token)
-
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    hashed_password = get_password_hash(new_password)
-    user.hashed_password = hashed_password
-    db.commit()
-
-    return {"message": "Password reset successful"}
-
-
-@router.get("/admin/panel", summary="Панель администратора", tags=["Admin"])
-async def admin_panel(current_user: User = Depends(admin_required)):
-    """
-    Доступно только администраторам.
-    Возвращает панель администратора.
-    """
-    return {"message": "Welcome to the admin panel", "user": current_user.username}
