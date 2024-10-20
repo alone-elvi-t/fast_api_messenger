@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from .routes import auth, chat
+
+from .routers import auth, chat
+
 
 app = FastAPI()
 

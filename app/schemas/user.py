@@ -1,6 +1,7 @@
 from fastapi import Form
 from pydantic import BaseModel
 
+
 class UserCreate:
     # Извлечение данных из формы
     def __init__(self, username: str = Form(...), password: str = Form(...)):

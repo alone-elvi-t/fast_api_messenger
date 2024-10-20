@@ -4,14 +4,14 @@
 
 {% block content %}
 <h2 class="mt-5">Вход</h2>
-<form id="login-form" class="mt-4">
+<form id="login-form" class="mt-4" method="post" action="/auth/login/">
     <div class="mb-3">
         <label for="username" class="form-label">Имя пользователя</label>
-        <input type="text" class="form-control" id="username" required>
+        <input type="text" class="form-control" id="username" name="username" required>
     </div>
     <div class="mb-3">
         <label for="password" class="form-label">Пароль</label>
-        <input type="password" class="form-control" id="password" required>
+        <input type="password" class="form-control" id="password" name="password" required>
     </div>
     <button type="submit" class="btn btn-primary">Войти</button>
 </form>

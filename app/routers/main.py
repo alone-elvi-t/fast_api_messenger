@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
-from app.utils import templates
+from app.utils.utils import templates
 
 router = APIRouter()
 
