@@ -1,45 +1,63 @@
-from app.models import Base
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Enum, Index
-from sqlalchemy.orm import relationship
-from datetime import datetime
+"""Модуль, определяющий модель сообщения и связанные с ней структуры."""
+
 import enum
+from datetime import datetime
+from sqlalchemy.sql import expression
+
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, text
+from sqlalchemy.orm import relationship
+from sqlalchemy.types import TypeDecorator
+from sqlalchemy import event, types
 
 
-class MessageStatus(enum.Enum):
-    sent = "sent"
-    delivered = "delivered"
-    read = "read"
+from app.models import Base
+
+
 
 
 class Message(Base):
+    """Модель сообщения."""
+
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, index=True)
-
-    # Отправитель и получатель сообщения
-    sender_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    receiver_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-
-    # Содержание сообщения
     content = Column(String, nullable=False)
-
-    # Метка времени
+    sender = Column(String, ForeignKey("users.username"), nullable=False)
+    receiver = Column(String, ForeignKey("users.username"), nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    # Статус сообщения (по умолчанию - отправлено)
-    status = Column(Enum(MessageStatus), default=MessageStatus.sent, nullable=False)
-
-    # Связи с моделью User (если требуется)
-    sender = relationship(
-        "User", foreign_keys=[sender_id], lazy="select", backref="sent_messages"
-    )
-    receiver = relationship(
-        "User", foreign_keys=[receiver_id], lazy="select", backref="received_messages"
+    status = Column(
+        String(20),
+        nullable=False,
+        server_default=text("'sent'")
     )
 
-    # Индексы для оптимизации запросов
     __table_args__ = (
-        Index(
-            "ix_sender_receiver", "sender_id", "receiver_id"
-        ),  # Индекс на пары sender/receiver
+        Index("ix_sender_receiver", "sender", "receiver"),
     )
+
+    def to_dict(self):
+        """Преобразует объект сообщения в словарь."""
+        return {
+            "id": self.id,
+            "content": self.content,
+            "sender": self.sender,
+            "receiver": self.receiver,
+            "timestamp": self.timestamp.isoformat(),
+            "status": self.status
+        }
+
+    def __repr__(self):
+        return f"Message(id={self.id}, sender={self.sender}, receiver={self.receiver}, status={self.status})"
+
+    def __str__(self):
+        return f"Message(sender={self.sender}, receiver={self.receiver}, content={self.content})"
+
+@event.listens_for(Message, 'before_insert')
+def lowercase_status(mapper, connection, target):
+    if target.status:
+        target.status = target.status.lower()
+
+@event.listens_for(Message, 'before_update')
+def lowercase_status_on_update(mapper, connection, target):
+    if target.status:
+        target.status = target.status.lower()

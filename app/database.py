@@ -1,20 +1,31 @@
-from sqlalchemy import create_engine
+"""Модуль для настройки и управления подключением к базе данных."""
+
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-# Подключение к базе данных
-SQLALCHEMY_DATABASE_URL = "postgresql://user:password@db/chat_db"
+DATABASE_URL = "postgresql+asyncpg://user:password@db:5432/chat_db"
 
-# Создание объекта engine для подключения к базе данных
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Создание асинхронного движка
+engine = create_async_engine(DATABASE_URL, echo=True)
 
-# Фабрика сессий для работы с базой данных
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Создание фабрики сессий
+AsyncSessionLocal = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
 
+# Зависимость для получения сессии
+async def get_db():
+    """Асинхронный генератор для получения сессии базы данных."""
+    async with AsyncSessionLocal() as session:
+        yield session
 
-# Получение сессии базы данных
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """Асинхронный генератор для получения сессии базы данных."""
+    async with AsyncSessionLocal() as session:
+        yield session
+
+# Убедитесь, что эта функция определена и не закомментирована

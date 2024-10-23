@@ -3,10 +3,21 @@
 {% block title %}Chat{% endblock %}
 
 {% block content %}
-<h2 class="mt-5">Чат</h2>
-<div class="chat-window mb-3" id="chat-window"></div>
-<form id="message-form" class="d-flex">
-    <input type="text" class="form-control me-2" id="message" placeholder="Введите сообщение" required>
-    <button type="submit" class="btn btn-primary">Отправить</button>
-</form>
+<div class="container">
+    <div id="chat-section" class="mt-4">
+        <!-- Явно добавляем select для получателей -->
+        <div class="form-group mb-3">
+            <select id="recipient-select" class="form-control">
+                <option value="">Выберите получателя</option>
+            </select>
+        </div>
+        <div id="chat-window" class="mb-3" style="height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
+        <form id="message-form">
+            <div class="input-group">
+                <input type="text" id="message" class="form-control" placeholder="Введите сообщение">
+                <button type="submit" class="btn btn-primary">Отправить</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
