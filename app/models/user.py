@@ -1,3 +1,4 @@
+"""Модуль, определяющий модель пользоваеля и связанные с ней структуры."""
 from sqlalchemy import Column, Integer, String
 from app.models import Base
 

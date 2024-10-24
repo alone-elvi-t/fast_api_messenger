@@ -2,12 +2,12 @@
 
 from contextlib import asynccontextmanager
 
-# import asyncio  # Удалите эту строку, если asyncio не используется напрямую
+
 from fastapi import FastAPI, APIRouter
 from fastapi.staticfiles import StaticFiles
 from app.routers import auth, chat, main, user, websocket
 from app.database import engine
-from app.models import Base  # Импортируем Base из app/models/__init__.py
+from app.models import Base
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
